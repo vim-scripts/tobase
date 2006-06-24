@@ -1,0 +1,91 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=1583
+
+Number base converter and character to html entity converter.
+Plugin script for vim on any OS. 
+
+(1) Number/character base converter:
+Get a quick answer about a number or character without having
+to refer to an external chart or calculator.
+
+Syntaxes are 
+ :Tobase obase inum
+ :Tobase obase [0oxy&]inum -- Optional modifier is '0,o,x,y,or &'
+
+Convert inum to obase and and return it.
+The result will be placed in the unnamed register @@ 
+where a subsequent 'p' command would put the result 
+|P| before, |p| after the cursor. 
+Optional modifier preceeding inum indicates input base
+of octal, hexadecimal, binary, or html character entity (e.g., &Auml;).
+Version 1.2 has been extended to allow input number to be a character. 
+(note: vy captures 1 character under the cursor.)
+(note: inum may be pasted from the mouse copied from any screen.)
+Input base defaults to decimal if not preceeded by a modifier.
+Output base may be 2-32, c, or h (c-character, h-html).
+Multiple numbers can be input at once.
+
+You could define a command to reduce typing Tobase e.g.,
+command -nargs=* C Tobase <args>
+Then you could execute it like the following examples:
+:C 16 101              -- prints 65
+:C c 192 193 xc2  -- prints 3 accented capital A's: grave, acute, circ
+
+(2) Convert characters to/from html entities:
+Function call Syntaxes
+call Char2HtmlExec() -- Characters to entities (everything on all lines)
+[range] call Char2HtmlExec( [min, max, [string] ] ) -- Characters to entities
+[range] call Html2CharExec( [min, max, [string] ] ) -- Entities to characters
+[range] call Char2AsciiExec( [min, max, [string] ] ) -- Characters to ascii simulation
+
+The optional [range] may be line numbers such as 1,15 
+or it may be relative such as .-5,.+5 or markers such as 'a,'b.
+Range may also be searches such as /line with this/,/line with that/
+If range is omitted, or if range equates to just 1 line, it does all lines.
+
+The optional [min, max, [string] ] goes like this:
+min and max are numbers or characters which evaluate via Tobase
+to the range of 128 to 255.
+If both min and max are equal to 0, it means 'do not convert any entities'.
+In order to specify the optional [string], both min and max must be present.
+The optional [string] is useful to specify whether to convert 
+the & < > " to or from &  <  > "
+If [string] contains & it should be the first one.
+[string] can contain any combination of & < > "
+
+Thus, [range] call Char2HtmlExec(0, 0, '& < > "') 
+would cause html in [range] to display literally in the browser.
+
+It is easier for me to put these commands in my ~/.vimrc file:
+command! -range -nargs=* Foo <line1>,<line2>call Char2HtmlExec(<f-args>)
+command! -range -nargs=* Foof <line1>,<line2>call Html2CharExec(<f-args>)
+command! -range -nargs=* Fooa <line1>,<line2>call Char2AsciiExec(<f-args>)
+Those commands should be entered exactly as seen.
+You may use other names besides Foo, Foof, and Fooa.
+
+Command syntaxes
+[range] Foo [ min max [string] ]
+In the command, note that there are not commas between the arguments
+and there are not any parentheses, i.e., Foo(128, 255, '&<>"') is wrong!
+
+With the commands in place the syntax is easier:
+Foo        - convert all accented characters to entities and convert & < > "
+Foo j      - (j)ust convert & < > "
+Foo n      - (n)ot convert & < > "
+
+:Tobase -h    (Help)
+:Tobase -hc  (Character conversion help)
+
+To run from the command line, a script like this could do the job:
+"::::::::::::::
+"foo.vim
+"::::::::::::::
+"vim -e input_file_name < foo.vim
+"c:\vim\vim62\gvim.exe -e input_file_name +"source foo.vim"
+"                                                                         :help gui-w32-cmdargs
+:if argc() == 1 && exists("*Char2HtmlExec")
+    :let ofile=argv(0) . '.tmp'
+    :call Char2HtmlExec()
+    :execute ':w!' . ofile . "\n"
+:endif
+:q
+
